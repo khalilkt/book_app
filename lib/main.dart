@@ -8,15 +8,15 @@ void main() {
 
 class BooksApp extends StatelessWidget {
   const BooksApp({Key? key}) : super(key: key);
-  // This widget is  the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Books App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+          primarySwatch: Colors.blue,
+          textTheme: TextTheme(bodyText2: TextStyle(fontFamily: 'Poppins'))),
       home: Builder(builder: (context) {
         SizeConfig.init(MediaQuery.of(context).size);
 

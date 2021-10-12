@@ -13,7 +13,8 @@ class BookSubjPage extends StatefulWidget {
   _BookSubjPageState createState() => _BookSubjPageState();
 }
 
-class _BookSubjPageState extends State<BookSubjPage> {
+class _BookSubjPageState extends State<BookSubjPage>
+    with TickerProviderStateMixin {
   final List<String> subjects = [
     "Biography",
     "Business",
@@ -31,7 +32,7 @@ class _BookSubjPageState extends State<BookSubjPage> {
   GlobalKey nextButKey = GlobalKey();
 
   //THE SHOOW! jk
-  Future<void> startAnimation() async {
+  Future<void> startTransitionAnimation() async {
     List<GlobalKey> keys = [];
     //getting the globalkeys for the subjectscontainers that are selected
     for (int i = 0; i < selection.length; i++) {
@@ -45,17 +46,37 @@ class _BookSubjPageState extends State<BookSubjPage> {
       entry.remove();
     }
 
+    AnimationController animController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
     entry = OverlayEntry(builder: (c) {
       return GestureDetector(
           onTap: () {
             removeEntry();
           },
-          child: OverlayPageTransition(
+          child: PageTransitionOverlay(
+              animationController: animController,
               nextButKey: nextButKey,
               keys: keys,
               backColor: const Color(0xffEDF3FA)));
     });
     Overlay.of(context)?.insert(entry);
+    // Duration dur =
+    //     Duration(milliseconds: animController.duration!.inMilliseconds);
+    Duration dur =
+        animController.duration!; //when the screen is filled with blue
+    dur = dur * (0.6 + 2 * 0.4 / 3);
+
+    animController.forward();
+    await Future.delayed(dur);
+    Navigator.of(context).pushReplacement(
+        PageRouteBuilder(pageBuilder: (c, animation, secondaryAnimation) {
+      return HomePage();
+    }, transitionsBuilder: (c, animation, secondatyAnimation, child) {
+      return child;
+    }));
+
+    await Future.delayed(animController.duration! - dur);
+    removeEntry();
   }
 
   Widget _buildSubjectRow(int sIndex) {
@@ -113,12 +134,7 @@ class _BookSubjPageState extends State<BookSubjPage> {
                   backColor: selection.contains(true) ? mainColor : Colors.grey,
                   text: "Next",
                   onTap: () async {
-                    startAnimation();
-                    await Future.delayed(Duration(seconds: 1));
-                    Navigator.of(context)
-                        .pushReplacement(MaterialPageRoute(builder: (c) {
-                      return HomePage();
-                    }));
+                    startTransitionAnimation();
                   },
                   padding:
                       const EdgeInsets.symmetric(vertical: 12, horizontal: 38))
@@ -170,33 +186,39 @@ class SubjectContainer extends StatelessWidget {
   }
 }
 
-class OverlayPageTransition extends StatefulWidget {
+class PageTransitionOverlay extends StatefulWidget {
   final List<GlobalKey> keys;
   final Color backColor;
   final GlobalKey nextButKey;
-  const OverlayPageTransition(
+  final AnimationController animationController;
+  const PageTransitionOverlay(
       {Key? key,
+      required this.animationController,
       required this.keys,
       required this.backColor,
       required this.nextButKey})
       : super(key: key);
 
   @override
-  _OverlayPageTransitionState createState() => _OverlayPageTransitionState();
+  _PageTransitionOverlayState createState() => _PageTransitionOverlayState();
 }
 
-class _OverlayPageTransitionState extends State<OverlayPageTransition>
-    with TickerProviderStateMixin {
+class _PageTransitionOverlayState extends State<PageTransitionOverlay> {
   late List<Rect> rects;
   late Rect nextButRect;
-  late AnimationController animationController;
+  //first part  : the subjects flow to next button
+  // seconde part: the next button scale
+  //thrid part is the reverse of the seconde part
   late Animation<double> firtPartAnimation = Tween<double>(begin: 0, end: 1)
       .animate(CurvedAnimation(
-          parent: animationController, curve: const Interval(0, .6)));
-  late Animation<double> secondePartAnimation = Tween<double>(begin: 0, end: 1)
-      .animate(CurvedAnimation(
-          parent: animationController,
-          curve: Interval(.8, 1, curve: Curves.easeInCubic)));
+          parent: widget.animationController, curve: const Interval(0, .6)));
+  late Animation<double> secondePartAnimation = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0, end: 1), weight: .25),
+    TweenSequenceItem(tween: Tween(begin: 1, end: 1), weight: .5),
+    TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: .25),
+  ]).animate(CurvedAnimation(
+      parent: widget.animationController,
+      curve: const Interval(.6, 1, curve: Curves.easeOut)));
 
   @override
   void initState() {
@@ -208,15 +230,15 @@ class _OverlayPageTransitionState extends State<OverlayPageTransition>
       rects.add(_renderBoxToRect(
           (k.currentContext!.findRenderObject() as RenderBox)));
     }
-    animationController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000));
-    animationController.forward();
+    // animationController = AnimationController(
+    //     vsync: this, duration: const Duration(milliseconds: 1000));
+    // animationController.forward();
     // print("rects :  $rects");
   }
 
   @override
   void dispose() {
-    animationController.dispose();
+    widget.animationController.dispose();
     super.dispose();
   }
 
@@ -259,7 +281,7 @@ class _OverlayPageTransitionState extends State<OverlayPageTransition>
             }),
             ...List.generate(rects.length, (index) {
               return AnimatedBuilder(
-                  animation: animationController,
+                  animation: widget.animationController,
                   child: _keyToSubjectContainer(widget.keys[index]),
                   builder: (context, w) {
                     Tween<Offset> tween = Tween(
@@ -302,8 +324,9 @@ class _OverlayPageTransitionState extends State<OverlayPageTransition>
                 child: Container(
                   width: nextButRect.width,
                   height: nextButRect.height,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
+                  decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      // borderRadius: BorderRadius.circular(30),
                       color: mainColor),
                 ),
               ),
