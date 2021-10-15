@@ -1,6 +1,9 @@
+import 'package:books_app/bloc/auth_cubit.dart';
+import 'package:books_app/ui/pages/auth_wrapper.dart';
 import 'package:books_app/ui/pages/sign_page.dart';
 import 'package:flutter/material.dart';
 import 'package:books_app/ui/size_config.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
   runApp(const BooksApp());
@@ -16,11 +19,15 @@ class BooksApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
           primarySwatch: Colors.blue,
-          textTheme: TextTheme(bodyText2: TextStyle(fontFamily: 'Poppins'))),
+          textTheme:
+              const TextTheme(bodyText2: TextStyle(fontFamily: 'Poppins'))),
       home: Builder(builder: (context) {
         SizeConfig.init(MediaQuery.of(context).size);
-
-        return const SignPage();
+        return BlocProvider(
+          lazy: false,
+          create: (context) => AuthCubit(),
+          child: const AuthWrapper(),
+        );
       }),
     );
   }

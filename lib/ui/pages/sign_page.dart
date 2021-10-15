@@ -1,5 +1,7 @@
+import 'package:books_app/bloc/auth_cubit.dart';
 import 'package:books_app/ui/constants.dart';
-import 'package:books_app/ui/pages/book_subjects_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:books_app/ui/size_config.dart';
 import 'package:books_app/ui/widgets/def_button.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,12 @@ class _SignPageState extends State<SignPage>
       vsync: this, duration: const Duration(milliseconds: 400));
   late PageController pageController = PageController(initialPage: 0);
   bool keyboardVis = false;
+
+  TextEditingController nameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController signInEmailController = TextEditingController();
+  TextEditingController signInPasswordController = TextEditingController();
 
   Widget _buildSignUpPage() {
     return Container(
@@ -46,32 +54,42 @@ class _SignPageState extends State<SignPage>
                     fontWeight: FontWeight.w900),
               ),
             ),
-            const DefTextField(
+            DefTextField(
+              controller: nameController,
               hint: 'Username',
             ),
-            const DefTextField(
+            DefTextField(
+              controller: emailController,
               hint: 'Email',
             ),
-            const DefTextField(
+            DefTextField(
+              controller: passwordController,
               hint: 'Password',
             ),
             DefButton(
                 text: "Sign Up",
                 width: double.infinity,
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (c) {
-                    return const BookSubjPage();
-                  }));
+                onTap: () async {
+                  await context.read<AuthCubit>().signUpWithEmail(
+                        nameController.text,
+                        emailController.text,
+                        passwordController.text,
+                      );
+                  // Navigator.of(context).push(MaterialPageRoute(builder: (c) {
+                  //   return const BookSubjPage();
+                  // }));
                 }),
             keyboardVis
-                ? SizedBox()
+                ? const SizedBox()
                 : Row(
                     children: [
-                      Text("already have an account ? ",
+                      Text("Already have an account? ",
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
                           style: TextStyle(
                               color: const Color(0xff888888),
                               fontWeight: FontWeight.w400,
-                              fontSize: SizeConfig.ww * .52)),
+                              fontSize: SizeConfig.ww * .46)),
                       GestureDetector(
                         onTap: () {
                           pageController.animateToPage(1,
@@ -83,7 +101,7 @@ class _SignPageState extends State<SignPage>
                           style: TextStyle(
                               color: const Color(0xff888888),
                               fontWeight: FontWeight.w900,
-                              fontSize: SizeConfig.ww * .52),
+                              fontSize: SizeConfig.ww * .46),
                         ),
                       )
                     ],
@@ -118,10 +136,12 @@ class _SignPageState extends State<SignPage>
                     fontWeight: FontWeight.w900),
               ),
             ),
-            const DefTextField(
+            DefTextField(
+              controller: signInEmailController,
               hint: 'Username',
             ),
-            const DefTextField(
+            DefTextField(
+              controller: signInPasswordController,
               hint: 'Email',
             ),
             DefButton(
@@ -152,12 +172,13 @@ class _SignPageState extends State<SignPage>
                   ],
                 )),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("Don't have an account ? ",
                     style: TextStyle(
                         color: const Color(0xff888888),
                         fontWeight: FontWeight.w400,
-                        fontSize: SizeConfig.ww * .52)),
+                        fontSize: SizeConfig.ww * .46)),
                 GestureDetector(
                   onTap: () {
                     pageController.animateTo(0,
@@ -169,7 +190,7 @@ class _SignPageState extends State<SignPage>
                     style: TextStyle(
                         color: const Color(0xff888888),
                         fontWeight: FontWeight.w900,
-                        fontSize: SizeConfig.ww * .52),
+                        fontSize: SizeConfig.ww * .46),
                   ),
                 )
               ],
@@ -209,7 +230,9 @@ class _SignPageState extends State<SignPage>
 
 class DefTextField extends StatelessWidget {
   final String hint;
-  const DefTextField({Key? key, required this.hint}) : super(key: key);
+  final TextEditingController controller;
+  const DefTextField({Key? key, required this.hint, required this.controller})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -219,6 +242,7 @@ class DefTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: const Color(0xff707070), width: 2)),
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 30, vertical: 16),

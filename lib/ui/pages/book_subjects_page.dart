@@ -1,8 +1,11 @@
+import 'package:books_app/bloc/auth_cubit.dart';
+import 'package:books_app/bloc/books_cubit.dart';
 import 'package:books_app/ui/constants.dart';
 import 'package:books_app/ui/pages/home_page.dart';
 import 'package:books_app/ui/widgets/def_button.dart';
 import 'package:books_app/ui/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../size_config.dart';
 
@@ -70,7 +73,12 @@ class _BookSubjPageState extends State<BookSubjPage>
     await Future.delayed(dur);
     Navigator.of(context).pushReplacement(
         PageRouteBuilder(pageBuilder: (c, animation, secondaryAnimation) {
-      return HomePage();
+      return BlocProvider(
+        lazy: false,
+        create: (c) => BooksCubit(
+            (context.read<AuthCubit>().state as UserLogedState).user),
+        child: const HomePage(),
+      );
     }, transitionsBuilder: (c, animation, secondatyAnimation, child) {
       return child;
     }));

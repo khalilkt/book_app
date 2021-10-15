@@ -47,9 +47,25 @@ class BookContainer extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.network(
-              book.thumbnail,
+              book.thumbnail ?? '',
               height: height * .84,
+              width: height * .6,
               fit: BoxFit.fitHeight,
+              // loadingBuilder: (c, w, cc) {
+              //   print(
+              //       "loading : ${cc?.cumulativeBytesLoaded}/${cc?.expectedTotalBytes} ");
+              //   return Container(
+              //     child: Text(
+              //         '${cc?.cumulativeBytesLoaded} /${cc?.expectedTotalBytes} '),
+              //   );
+              // },
+              errorBuilder: (c, _, __) {
+                return Container(
+                  color: Colors.red,
+                  height: height * .84,
+                  width: height * .6,
+                );
+              },
             ),
           ),
           SizedBox(
@@ -62,8 +78,17 @@ class BookContainer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("by ${book.authors[0]}",
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  Builder(
+                    builder: (c) {
+                      String t = '';
+                      for (String name in book.authors) {
+                        t += name + ',';
+                      }
+                      return Text("by $t",
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[600]));
+                    },
+                  ),
                   Text(book.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
