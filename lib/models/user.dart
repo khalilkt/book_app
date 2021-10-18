@@ -1,5 +1,4 @@
-import 'package:books_app/models/book.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fireAuth;
+import 'package:firebase_auth/firebase_auth.dart' as fire_auth;
 
 class User {
   String name;
@@ -10,7 +9,7 @@ class User {
       required this.favoriteBooks,
       required this.favCategories});
 
-  static User fromData(fireAuth.User firebaseUser, Map<String, dynamic> data) {
+  static User fromData(fire_auth.User firebaseUser, Map<String, dynamic> data) {
     return User(
         name: firebaseUser.displayName ?? 'Reader',
         favCategories: List.from(data["fav-categories"] ?? []),

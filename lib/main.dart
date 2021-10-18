@@ -1,6 +1,5 @@
 import 'package:books_app/bloc/auth_cubit.dart';
 import 'package:books_app/ui/pages/auth_wrapper.dart';
-import 'package:books_app/ui/pages/sign_page.dart';
 import 'package:flutter/material.dart';
 import 'package:books_app/ui/size_config.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

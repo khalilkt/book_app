@@ -1,5 +1,6 @@
 import 'package:books_app/bloc/auth_cubit.dart';
 import 'package:books_app/bloc/books_cubit.dart';
+import 'package:books_app/logg.dart';
 import 'package:books_app/ui/constants.dart';
 import 'package:books_app/ui/pages/home_page.dart';
 import 'package:books_app/ui/widgets/def_button.dart';
@@ -37,54 +38,62 @@ class _BookSubjPageState extends State<BookSubjPage>
   //THE SHOOW! jk
   Future<void> startTransitionAnimation() async {
     List<GlobalKey> keys = [];
+    List<String> categories = [];
     //getting the globalkeys for the subjectscontainers that are selected
     for (int i = 0; i < selection.length; i++) {
       if (selection[i]) {
+        categories.add(subjects[i]);
         keys.add(subjectsKeys[i]);
       }
     }
 
-    late OverlayEntry entry;
-    void removeEntry() {
-      entry.remove();
+    try {
+      await context.read<AuthCubit>().updateUserCategories(categories);
+      late OverlayEntry entry;
+      void removeEntry() {
+        entry.remove();
+      }
+
+      AnimationController animController = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 1200));
+      entry = OverlayEntry(builder: (c) {
+        return GestureDetector(
+            onTap: () {
+              removeEntry();
+            },
+            child: PageTransitionOverlay(
+                animationController: animController,
+                nextButKey: nextButKey,
+                keys: keys,
+                backColor: const Color(0xffEDF3FA)));
+      });
+      Overlay.of(context)?.insert(entry);
+      Duration dur = animController.duration!;
+      dur = dur * (0.6 + 2 * 0.4 / 3); //when the screen is filled with blue
+
+      animController.forward();
+      await Future.delayed(dur);
+
+      Navigator.of(context).push(
+          PageRouteBuilder(pageBuilder: (c, animation, secondaryAnimation) {
+        return MultiBlocProvider(providers: [
+          BlocProvider(
+              create: (_) => BooksCubit(
+                  (context.read<AuthCubit>().state as UserLogedState).user)),
+          BlocProvider.value(
+            value: context.read<AuthCubit>(),
+          )
+        ], child: const HomePage());
+      }, transitionsBuilder: (c, animation, secondatyAnimation, child) {
+        return child;
+      }));
+
+      await Future.delayed(animController.duration! - dur);
+      removeEntry();
+    } catch (e) {
+      logg(
+          'excpetion caught when start the trnaistion animation in the subject page : $e');
     }
-
-    AnimationController animController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200));
-    entry = OverlayEntry(builder: (c) {
-      return GestureDetector(
-          onTap: () {
-            removeEntry();
-          },
-          child: PageTransitionOverlay(
-              animationController: animController,
-              nextButKey: nextButKey,
-              keys: keys,
-              backColor: const Color(0xffEDF3FA)));
-    });
-    Overlay.of(context)?.insert(entry);
-    // Duration dur =
-    //     Duration(milliseconds: animController.duration!.inMilliseconds);
-    Duration dur =
-        animController.duration!; //when the screen is filled with blue
-    dur = dur * (0.6 + 2 * 0.4 / 3);
-
-    animController.forward();
-    await Future.delayed(dur);
-    Navigator.of(context).pushReplacement(
-        PageRouteBuilder(pageBuilder: (c, animation, secondaryAnimation) {
-      return BlocProvider(
-        lazy: false,
-        create: (c) => BooksCubit(
-            (context.read<AuthCubit>().state as UserLogedState).user),
-        child: const HomePage(),
-      );
-    }, transitionsBuilder: (c, animation, secondatyAnimation, child) {
-      return child;
-    }));
-
-    await Future.delayed(animController.duration! - dur);
-    removeEntry();
   }
 
   Widget _buildSubjectRow(int sIndex) {
@@ -114,39 +123,45 @@ class _BookSubjPageState extends State<BookSubjPage>
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color(0xffEDF3FA),
-        body: SizedBox(
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  "Choose your \nfavorite genres",
-                  textAlign: TextAlign.left,
-                  style: TextStyle(
-                      color: mainColor,
-                      fontWeight: FontWeight.w800,
-                      fontSize: SizeConfig.ww * .8),
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: const Color(0xffEDF3FA),
+          body: SizedBox(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Choose your \nfavorite genres",
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                        color: mainColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: SizeConfig.ww * .8),
+                  ),
                 ),
-              ),
-              _buildSubjectRow(0),
-              _buildSubjectRow(3),
-              _buildSubjectRow(6),
-              DefButton(
-                  key: nextButKey,
-                  backColor: selection.contains(true) ? mainColor : Colors.grey,
-                  text: "Next",
-                  onTap: () async {
-                    startTransitionAnimation();
-                  },
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 38))
-            ],
+                _buildSubjectRow(0),
+                _buildSubjectRow(3),
+                _buildSubjectRow(6),
+                DefButton(
+                    key: nextButKey,
+                    backColor:
+                        selection.contains(true) ? mainColor : Colors.grey,
+                    text: "Next",
+                    onTap: () async {
+                      startTransitionAnimation();
+                    },
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 38))
+              ],
+            ),
           ),
         ),
       ),

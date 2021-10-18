@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart';
 
 const String AUTH_CUBIT = 'Auth Cubit';
 const String AUTH_REPO = 'Auth Repo';
 const String BOOK_REPO = 'Books Repo';
+const String BOOK_CUBIT = 'Books Cubit';
 
 void logg(String message, [String from = 'All']) {
   if (kDebugMode) {
